@@ -607,7 +607,22 @@ Pci_host_generic::init_dev_resources(Hw_pci_device *hw_dev)
   info().printf("Device 0x%x: io provides legacy IRQ resource %i\n",
                 hw_dev->dev_id, io_irq);
 
-  _irq_router.add_route(io_irq, irq_ic(), hw_dev->dev_id, pin, line);
+  try
+  {
+    _irq_router.add_route(io_irq, irq_ic(), hw_dev->dev_id, pin, line);
+  }
+  catch (L4::Runtime_error &e)
+  {
+    l4_uint32_t vendor_device = 0;
+    // if that call fails, vendor/device will remain zero
+    hw_dev->cfg_read(Pci_hdr_vendor_id_offset, &vendor_device,
+                     Vmm::Mem_access::Width::Wd32);
+    warn().printf("Legacy IRQ cannot be bound and will not work ('%s'). "
+                  "PCI vendor/device=%04x:%04x io_irq=%d pin=%u line=%u\n",
+                  e.extra_str(), vendor_device & 0xffff, vendor_device >> 16,
+                  io_irq, pin, line);
+    return;
+  }
 
   info().printf("  legacy IRQ mapping: %d -> %u (pin %c)\n", io_irq, line,
                 'A' + (pin - 1));

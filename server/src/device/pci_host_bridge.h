@@ -183,6 +183,9 @@ public:
    * \param dev_id     PCI device ID.
    * \param pin        PCI interrupt pin (1 = A, 2 = B, 3 = C, 4 = D).
    * \param guest_irq  Guest IRQ.
+   *
+   * \throws L4::Runtime_error If the legacy interrupt routing could
+   *                   not be established.
    */
   void add_route(unsigned host_irq, cxx::Ref_ptr<Gic::Ic> const &ic,
                  unsigned dev_id, unsigned pin, unsigned guest_irq)
